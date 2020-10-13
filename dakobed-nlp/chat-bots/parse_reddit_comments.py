@@ -122,12 +122,11 @@ def find_existing_score(pid):
         return False
 
 
-
 if __name__ == '__main__':
     create_table()
     row_counter = 0
     paired_rows = 0
-    with open('data/RC_2015-01', buffering=1000) as f:
+    with open('data/reddit_january_2015_comments.txt', buffering=1000) as f:
         for row in f:
             # time.sleep(555)
             row_counter += 1
@@ -142,32 +141,27 @@ if __name__ == '__main__':
                     comment_id = row['id']
 
                     subreddit = row['subreddit']
-                    if subreddit == 'Stormlight_Archive':
-                        print(row)
-                        #
-                        parent_data = find_parent(parent_id)
+                    print(row)
+                    #
+                    parent_data = find_parent(parent_id)
 
-                        existing_comment_score = find_existing_score(parent_id)
-                        if existing_comment_score:
-                            if score > existing_comment_score:
-                                if acceptable(body):
-                                    sql_insert_replace_comment(comment_id, parent_id, parent_data, body, subreddit,
-                                                               created_utc, score)
-
-                        else:
+                    existing_comment_score = find_existing_score(parent_id)
+                    if existing_comment_score:
+                        if score > existing_comment_score:
                             if acceptable(body):
-                                if parent_data:
-                                    if score >= 2:
-                                        sql_insert_has_parent(comment_id, parent_id, parent_data, body, subreddit,
-                                                              created_utc, score)
-                                        paired_rows += 1
-                                else:
-                                    sql_insert_no_parent(comment_id, parent_id, body, subreddit, created_utc, score)
+                                sql_insert_replace_comment(comment_id, parent_id, parent_data, body, subreddit,
+                                                           created_utc, score)
+                    else:
+                        if acceptable(body):
+                            if parent_data:
+                                if score >= 2:
+                                    sql_insert_has_parent(comment_id, parent_id, parent_data, body, subreddit,
+                                                          created_utc, score)
+                                    paired_rows += 1
+                            else:
+                                sql_insert_no_parent(comment_id, parent_id, body, subreddit, created_utc, score)
                 except Exception as e:
                     print(str(e))
-
-
-
 
             # if row_counter % 100000 == 0:
             #     print('Total Rows Read: {}, Paired Rows: {}, Time: {}'.format(row_counter, paired_rows,
